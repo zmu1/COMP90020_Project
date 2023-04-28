@@ -5,44 +5,50 @@ import time
 
 class Server:
     def __init__(self):
-        # create a socket object
+        # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        # get local host name and port number
+        # Get local host name and port number
         self.host = socket.gethostname()
         self.port = 5999
 
-        # bind the port
+        # Bind the port
         self.server_socket.bind((self.host, self.port))
 
-        # set the maximum number of connections, after which the queue is full
+        # Set the maximum number of connections, after which the queue is full
         self.server_socket.listen(5)
 
-    def handle_connection(self, client_socket):
+    def handle_connection(self, client_socket, addr):
+        """
+        Handle each incoming socket connection
+        """
         print("Start handling connection...")
 
+        # Welcome message
         msg = 'Welcome to the server!' + "\r\n"
         client_socket.send(msg.encode('utf-8'))
 
+        # Keep sending commands to client
         while True:
+            # Request to take snapshot
             print("Request to take snapshot...")
-            msg = "snapshot"
-            client_socket.send(msg.encode('utf-8'))
+            command = "snapshot"
+            client_socket.send(command.encode('utf-8'))
 
-            # receive the message
+            # Receive client response
             response = client_socket.recv(1024)
             if response:
-                print("Response:", response.decode('utf-8'))
-            time.sleep(3)
+                print("Local value from {}: {}".format(addr, response.decode('utf-8')))
+            time.sleep(5)
 
     def run(self):
         while True:
-            # establish client connection
+            # Establish client connection
             client_socket, addr = self.server_socket.accept()
             print("Connected to: %s" % str(addr))
 
             # Thread-per-Connection
-            client_thread = threading.Thread(target=self.handle_connection, args=(client_socket,))
+            client_thread = threading.Thread(target=self.handle_connection, args=(client_socket, addr))
             client_thread.start()
 
 
