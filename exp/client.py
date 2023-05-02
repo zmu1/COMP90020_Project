@@ -2,6 +2,8 @@ import threading
 import socket
 import time
 
+import util
+
 
 class Client:
     def __init__(self):
@@ -40,25 +42,28 @@ class Client:
 
         while True:
             # receive the message
-            msg = self.server_socket.recv(1024)
-            if msg:
-                print("Command:", msg.decode('utf-8'))
+            reply = self.server_socket.recv(1024)
+            cmd = util.parse_msg(reply)
 
-            if msg.decode('utf-8') == 'snapshot':
-                if self.marker_received == 0:
-                    self.marker_received = 1
-                    print("Ready to take snapshot... local value:", self.foo_var)
-                    snapshot_value = str(self.foo_var)
-                    self.server_socket.send(snapshot_value.encode('utf-8'))
+            if cmd:
+                if cmd["type"] == "message":
+                    print(cmd["content"])
 
-                else:
-                    reply = "Snapshot already taken"
-                    self.server_socket.send(reply.encode('utf-8'))
+                elif cmd["type"] == "snapshot":
+                    # First Marker
+                    if self.marker_received == 0:
+                        self.marker_received = 1
 
-            # if msg.decode('utf-8') == 'snapshot':
-            #     print("Ready to take snapshot... local value:", self.foo_var)
-            #     snapshot_value = str(self.foo_var)
-            #     self.server_socket.send(snapshot_value.encode('utf-8'))
+                        print("Ready to take snapshot... local value:", self.foo_var)
+                        snapshot_value = str(self.foo_var)
+
+                        reply = util.construct_msg("state", snapshot_value)
+                        self.server_socket.send(reply)
+
+                    # State already recorded
+                    else:
+                        reply = util.construct_msg("state_recorded", "own state has been recorded")
+                        self.server_socket.send(reply)
 
     def run(self):
         # Thread for ML training

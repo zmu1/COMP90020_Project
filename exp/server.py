@@ -2,6 +2,8 @@ import threading
 import socket
 import time
 
+import util
+
 
 class Server:
     def __init__(self):
@@ -25,24 +27,25 @@ class Server:
         print("Start handling connection...")
 
         # Welcome message
-        msg = 'Welcome to the server!' + "\r\n"
-        client_socket.send(msg.encode('utf-8'))
+        msg_content = 'Welcome to the server!' + "\r\n"
+        welcome_msg = util.construct_msg("message", msg_content)
+        client_socket.send(welcome_msg)
 
         # Keep sending commands to client
         while True:
             # Request to take snapshot
             print("Request to take snapshot...")
-            command = "snapshot"
-            client_socket.send(command.encode('utf-8'))
+            snapshot_msg = util.construct_msg("snapshot", "record your state now")
+            client_socket.send(snapshot_msg)
 
             # Receive client response
             res = client_socket.recv(1024)
-            response = res.decode('utf-8')
+            response = util.parse_msg(res)
 
-            if response == "Snapshot already taken":
-                print(response)
-            else:
-                print("Local value from {}: {}".format(addr, response))
+            if response["type"] == "state_recorded":
+                print(response["content"])
+            elif response["type"] == "state":
+                print("Local value from {}: {}".format(addr, response["content"]))
 
             time.sleep(5)
 
