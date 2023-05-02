@@ -1,6 +1,7 @@
 import threading
 import socket
 import time
+import queue
 
 import util
 
@@ -10,6 +11,7 @@ class Client:
         # Initialise local value
         self.foo_var = 0
         self.marker_received = 0
+        self.channel_queue = queue.Queue()
 
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,7 +29,8 @@ class Client:
         """
         while True:
             self.foo_var += 1
-            print("Training progress:", self.foo_var)
+            if self.foo_var % 5 == 0:
+                print("Training progress:", self.foo_var)
 
             if self.foo_var % 12 == 0:
                 self.marker_received = 0
@@ -42,37 +45,51 @@ class Client:
 
         while True:
             # receive the message
-            reply = self.server_socket.recv(1024)
-            cmd = util.parse_msg(reply)
+            msg = self.server_socket.recv(1024)
+            self.channel_queue.put(msg)
 
-            if cmd:
-                if cmd["type"] == "message":
-                    print(cmd["content"])
+            print(list(self.channel_queue.queue))
 
-                elif cmd["type"] == "snapshot":
-                    # First Marker
-                    if self.marker_received == 0:
-                        self.marker_received = 1
+    def handle_command(self):
+        while True:
+            if self.channel_queue:
+                first_item = self.channel_queue.get()
+                cmd = util.parse_msg(first_item)
 
-                        print("Ready to take snapshot... local value:", self.foo_var)
-                        snapshot_value = str(self.foo_var)
+                if cmd:
+                    if cmd["type"] == "message":
+                        print(cmd["content"])
 
-                        reply = util.construct_msg("state", snapshot_value)
-                        self.server_socket.send(reply)
+                    elif cmd["type"] == "snapshot":
+                        # First Marker
+                        if self.marker_received == 0:
+                            self.marker_received = 1
 
-                    # State already recorded
-                    else:
-                        reply = util.construct_msg("state_recorded", "own state has been recorded")
-                        self.server_socket.send(reply)
+                            print("Ready to take snapshot... local value:", self.foo_var)
+                            snapshot_value = str(self.foo_var)
+
+                            reply = util.construct_msg("state", snapshot_value)
+                            self.server_socket.send(reply)
+
+                        # State already recorded
+                        else:
+                            reply = util.construct_msg("state_recorded", "own state has been recorded")
+                            self.server_socket.send(reply)
+
+            time.sleep(5)
 
     def run(self):
         # Thread for ML training
         train_thread = threading.Thread(target=self.train)
         train_thread.start()
 
-        # Thread for handling server commands
+        # Thread for receiving server commands
         server_thread = threading.Thread(target=self.listen_command)
         server_thread.start()
+
+        # Thread for handling commands
+        handling_thread = threading.Thread(target=self.handle_command)
+        handling_thread.start()
 
 
 client = Client()
