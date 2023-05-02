@@ -30,6 +30,8 @@ class Server:
 
         # Keep sending commands to client
         while True:
+            time.sleep(2)
+
             # Request to take snapshot
             print("Request to take snapshot...")
             command = "snapshot"
