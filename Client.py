@@ -2,9 +2,9 @@ import threading
 import socket
 import time
 import pickle
-import json
 import struct
 
+from CommHelper import send_socket_msg, recv_socket_msg
 from TfModel import TfModel, Status
 
 
@@ -60,7 +60,7 @@ class Client:
 
         while True:
             # receive the message
-            msg = self.recv_socket_msg(self.server_socket)
+            msg = recv_socket_msg(self.server_socket)
             if msg['type'] == 'command':
                 print("Command:", msg['content'])
 
@@ -74,22 +74,11 @@ class Client:
                     epoch, weights, loss, accuracy = self.check_local_state()
                     snapshot_value = "Current epoch: {}, loss: {}, accuracy: {}".format(epoch, loss, accuracy)
 
-                    # socket_packet = pickle.dumps({'type': 'snapshot_value', 'content': snapshot_value})
-                    # self.server_socket.send(socket_packet)
-                    self.send_socket_msg(self.server_socket, 'snapshot_value', snapshot_value)
+                    send_socket_msg(self.server_socket, 'snapshot_value', snapshot_value)
                 else:
-                    reply = "Snapshot already taken"
-                    socket_packet = pickle.dumps({'type': reply})
-                    # self.server_socket.send(socket_packet)
-                    self.send_socket_msg(self.server_socket, 'Snapshot already taken')
-
+                    send_socket_msg(self.server_socket, 'Snapshot already taken')
             else:
                 print(msg)
-
-            # if msg.decode('utf-8') == 'snapshot':
-            #     print("Ready to take snapshot... local value:", self.foo_var)
-            #     snapshot_value = str(self.foo_var)
-            #     self.server_socket.send(snapshot_value.encode('utf-8'))
 
     def run(self):
         # Thread for ML training
@@ -102,34 +91,12 @@ class Client:
 
     def send_model_weights(self):
         model_weights = self.model.check_current_weights()
-        # self.server_socket.send("Updated weights".encode('utf-8'))
-        # self.server_socket.send(pickle.dumps(model_weights))
-
-        # socket_packet = pickle.dumps({'type': 'updated_weights', 'content': model_weights})
-        # self.server_socket.send(socket_packet)
-        self.send_socket_msg(self.server_socket, 'updated_weights', model_weights)
+        send_socket_msg(self.server_socket, 'updated_weights', model_weights)
 
         print("Sent updated weights")
 
     def receive_model_weights(self, updated_weights):
         self.model.receive_updated_weights(updated_weights)
-
-    def send_socket_msg(self, conn, type, content=None):
-        msg = {'type': type, 'content': content}
-
-        packet = pickle.dumps(msg)
-        length_in_4_bytes = struct.pack('I', len(packet))
-        packet = length_in_4_bytes + packet
-
-        conn.send(packet)
-
-    def recv_socket_msg(self, conn):
-        length_in_4_bytes = conn.recv(4)
-        size = struct.unpack('I', length_in_4_bytes)
-        size = size[0]
-        data = conn.recv(size)
-
-        return pickle.loads(data)
 
 
 client = Client()

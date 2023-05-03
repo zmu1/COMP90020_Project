@@ -17,6 +17,7 @@ class TfDistributor:
     def collect_model_weights(self, weights):
         self.collected_weights.append(weights)
         print("Successfully collected model weights, existing weights count:", self.check_collected_num())
+        # print(weights)
 
     # def get_base_model(self):
     #     model = Sequential([

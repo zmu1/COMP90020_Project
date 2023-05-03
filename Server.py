@@ -1,10 +1,8 @@
 import threading
 import socket
 import time
-import pickle
-import json
-import struct
 
+from CommHelper import send_socket_msg, recv_socket_msg
 from TfDistributor import TfDistributor
 
 
@@ -33,9 +31,7 @@ class Server:
         print("Start handling connection...")
 
         # Welcome message
-        # socket_packet = pickle.dumps({'type': 'welcome', 'content': 'Welcome to the server!' + "\r\n"})
-        # client_socket.send(socket_packet)
-        self.send_socket_msg(client_socket, 'welcome', 'Welcome to the server!')
+        send_socket_msg(client_socket, 'welcome', 'Welcome to the server!')
 
         # Keep sending commands to client
         while True:
@@ -44,20 +40,17 @@ class Server:
             # Request to take snapshot
             print("Request to take snapshot...")
             command = "snapshot"
-            # socket_packet = pickle.dumps({'type': 'command', 'content': command})
-            # client_socket.send(socket_packet)
-            self.send_socket_msg(client_socket, 'command', command)
+            send_socket_msg(client_socket, 'command', command)
 
             # Receive client response
-            response = self.recv_socket_msg(client_socket)
+            response = recv_socket_msg(client_socket)
 
             if response['type'] == "Snapshot already taken":
                 print(response['type'])
             elif response['type'] == "updated_weights":
                 received_weights = response['content']
-                self.model_distributor.collect_model_weights(received_weights)
                 print("Received weights from client", addr)
-                print(received_weights)
+                self.model_distributor.collect_model_weights(received_weights)
             elif response['type'] == "snapshot_value":
                 print("Local value from {}: {}".format(addr, response['content']))
             else:
@@ -76,23 +69,6 @@ class Server:
             # Thread-per-Connection
             client_thread = threading.Thread(target=self.handle_connection, args=(client_socket, addr))
             client_thread.start()
-
-    def send_socket_msg(self, conn, type, content=None):
-        msg = {'type': type, 'content': content}
-
-        packet = pickle.dumps(msg)
-        length_in_4_bytes = struct.pack('I', len(packet))
-        packet = length_in_4_bytes + packet
-
-        conn.send(packet)
-
-    def recv_socket_msg(self, conn):
-        length_in_4_bytes = conn.recv(4)
-        size = struct.unpack('I', length_in_4_bytes)
-        size = size[0]
-        data = conn.recv(size)
-
-        return pickle.loads(data)
 
 
 server = Server()
