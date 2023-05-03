@@ -11,13 +11,26 @@ class TfDistributor:
         self.latest_model_weights = None
         self.collected_weights = []
 
+        self.total_clients = None
+
+    def set_total_clients(self, num):
+        self.total_clients = num
+
     def check_collected_num(self):
         return len(self.collected_weights)
 
     def collect_model_weights(self, weights):
         self.collected_weights.append(weights)
-        print("Successfully collected model weights, existing weights count:", self.check_collected_num())
+
+        collected_num = self.check_collected_num()
+        print("Successfully collected model weights, existing weights count:", collected_num)
         # print(weights)
+
+        if collected_num == self.total_clients:
+            print("All client models have been collected, ready to merge...")
+        else:
+            print("Models collected: {}, waiting for other {} clients"
+                  .format(collected_num, self.total_clients - collected_num))
 
     # def get_base_model(self):
     #     model = Sequential([

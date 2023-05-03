@@ -5,11 +5,14 @@ import time
 from CommHelper import send_socket_msg, recv_socket_msg
 from TfDistributor import TfDistributor
 
+CLIENT_NUM = 3
+
 
 class Server:
     def __init__(self):
         # Attach a model distributor
         self.model_distributor = TfDistributor()
+        self.model_distributor.set_total_clients(CLIENT_NUM)
 
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
