@@ -5,7 +5,7 @@ import time
 from CommHelper import send_socket_msg, recv_socket_msg
 from TfDistributor import TfDistributor
 
-CLIENT_NUM = 3
+CLIENT_NUM = 2
 
 
 class Server:

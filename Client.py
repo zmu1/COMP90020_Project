@@ -1,8 +1,6 @@
 import threading
 import socket
 import time
-import pickle
-import struct
 
 from CommHelper import send_socket_msg, recv_socket_msg
 from TfModel import TfModel, Status
