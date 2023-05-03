@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from enum import Enum
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential, load_model
@@ -8,14 +9,13 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from imblearn.over_sampling import SMOTE
-from keras.callbacks import LambdaCallback, Callback
+from keras.callbacks import LambdaCallback
 
-
-# class CustomCallback(Callback):
-#     def on_epoch_end(self, batch, logs=None):
-#         TfModel.update_current_epoch()
-#         update_current_weights()
-#         update_current_performance(logs['loss'], logs['accuracy'])
+class Status(Enum):
+    IDLE = 0
+    TRAINING = 1
+    WAITING_FOR_UPDATES = 2
+    TRAINED = 3
 
 class TfModel:
     def __init__(self):
@@ -24,6 +24,9 @@ class TfModel:
         self.current_weights = None
         self.current_loss = None
         self.current_accuracy = None
+
+        # Initialise training status
+        self.status = Status.IDLE
 
         # Init dataset
         self.X_train, self.X_test, self.y_train, self.y_test = None, None, None, None
@@ -72,10 +75,18 @@ class TfModel:
             on_epoch_end=lambda batch, logs: self.update_current_performance(logs['loss'], logs['accuracy']))
 
         self.model.compile(loss='binary_crossentropy', optimizer='adam', metrics='accuracy')
-        self.model.fit(self.X_train, self.y_train, epochs=200, batch_size=100, callbacks=[reset_epoch_callback,
+
+        if self.current_weights is not None:
+            self.model.set_weights(self.current_weights)
+            print("Train use updated weights")
+
+        self.model.fit(self.X_train, self.y_train, epochs=100, batch_size=100, callbacks=[reset_epoch_callback,
                                                                                           update_epoch_callback,
                                                                                           update_weights_callback,
                                                                                           update_performance_callback])
+        # Finish current round of training
+        # Waiting for updated model weights
+        self.status = Status.WAITING_FOR_UPDATES
 
     def update_current_epoch(self, reset=False):
         if reset:
@@ -84,7 +95,7 @@ class TfModel:
             self.current_epoch += 1
 
     def update_current_weights(self):
-        self.current_weights = self.model.layers[0].get_weights()
+        self.current_weights = self.model.get_weights()
 
     def update_current_performance(self, loss, accuracy):
         self.current_loss = loss
@@ -98,3 +109,7 @@ class TfModel:
 
     def check_current_performance(self):
         return self.current_loss, self.current_accuracy
+
+    def receive_updated_weights(self, updated_weights):
+        self.current_weights = updated_weights
+        print("Received updated weights")

@@ -1,6 +1,9 @@
 ### Dataset ###
 ml/creditcard.csv
 
+### IDE ###
+.idea/
+
 *.bundle.*
 lib/
 node_modules/
