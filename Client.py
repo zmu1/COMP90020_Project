@@ -75,6 +75,10 @@ class Client:
                     send_socket_msg(self.server_socket, 'snapshot_value', snapshot_value)
                 else:
                     send_socket_msg(self.server_socket, 'Snapshot already taken')
+            # Received merged new model weights from server
+            # Continue next round training
+            elif msg['type'] == 'updated_weights':
+                self.model.receive_updated_weights(msg['content'])
             else:
                 print(msg)
 

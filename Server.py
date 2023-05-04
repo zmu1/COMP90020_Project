@@ -27,11 +27,14 @@ class Server:
         # Set the maximum number of connections, after which the queue is full
         self.server_socket.listen(5)
 
+        self.all_socket_connections = []
+
     def handle_connection(self, client_socket, addr):
         """
         Handle each incoming socket connection
         """
         print("Start handling connection...")
+        self.all_socket_connections.append(client_socket)
 
         # Welcome message
         send_socket_msg(client_socket, 'welcome', 'Welcome to the server!')
@@ -53,13 +56,23 @@ class Server:
             elif response['type'] == "updated_weights":
                 received_weights = response['content']
                 print("Received weights from client", addr)
-                self.model_distributor.collect_model_weights(received_weights)
+
+                # If return weights != None, means already collected all model weights
+                # Returned weights is the new weights, ready to distribute to all
+                received_weights = self.model_distributor.collect_model_weights(received_weights)
+                if received_weights is not None:
+                    self.distribute_model_weights(received_weights)
             elif response['type'] == "snapshot_value":
                 print("Local value from {}: {}".format(addr, response['content']))
             else:
                 print(response)
 
             time.sleep(5)
+
+    def distribute_model_weights(self, new_weights):
+        # Send merged new model weights to all connected clients
+        for conn in self.all_socket_connections:
+            send_socket_msg(conn, "updated_weights", new_weights)
 
     def run(self):
         print("Ready to accept incoming connections...")

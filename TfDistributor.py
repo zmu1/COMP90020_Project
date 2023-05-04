@@ -29,7 +29,7 @@ class TfDistributor:
 
         if collected_num == self.total_clients:
             print("All client models have been collected, ready to merge...")
-            self.integrate_model_weights()
+            return self.integrate_model_weights()
         else:
             print("Models collected: {}, waiting for other {} clients"
                   .format(collected_num, self.total_clients - collected_num))
@@ -54,12 +54,17 @@ class TfDistributor:
         for weights in self.collected_weights:
             if sum_weights is None:
                 sum_weights = np.array(weights, dtype=object)
+                with open('original_weights.txt', 'w') as file:
+                    file.write(str(sum_weights))
             else:
                 sum_weights += np.array(weights, dtype=object)
 
         # Update with merged weights
         merged_weights = sum_weights / self.total_clients
         self.latest_model_weights = merged_weights
+
+        with open('merged_weights.txt', 'w') as file:
+            file.write(str(merged_weights))
 
         # print(np.array(merged_weights, dtype=object).shape)
         print("Model weights merged successfully!")
