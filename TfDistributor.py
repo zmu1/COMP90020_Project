@@ -19,6 +19,9 @@ class TfDistributor:
     def check_collected_num(self):
         return len(self.collected_weights)
 
+    def reset_collected_num(self):
+        self.collected_weights.clear()
+
     def collect_model_weights(self, weights):
         self.collected_weights.append(weights)
 
@@ -69,4 +72,5 @@ class TfDistributor:
         # print(np.array(merged_weights, dtype=object).shape)
         print("Model weights merged successfully!")
 
+        self.reset_collected_num()
         return self.latest_model_weights
