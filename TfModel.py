@@ -15,7 +15,7 @@ class Status(Enum):
     IDLE = 0
     TRAINING = 1
     WAITING_FOR_UPDATES = 2
-    TRAINED = 3
+    COMPLETE = 3
 
 class TfModel:
     def __init__(self):
@@ -87,9 +87,11 @@ class TfModel:
                                                                                           update_epoch_callback,
                                                                                           update_weights_callback,
                                                                                           update_performance_callback])
-        # Finish current round of training
-        # Waiting for updated model weights
-        self.status = Status.WAITING_FOR_UPDATES
+
+        if self.status != Status.COMPLETE:
+            # Finish current round of training
+            # Waiting for updated model weights
+            self.status = Status.WAITING_FOR_UPDATES
 
     def update_current_epoch(self, reset=False):
         if reset:
@@ -116,4 +118,7 @@ class TfModel:
     def receive_updated_weights(self, updated_weights):
         print("Received updated weights")
         self.current_weights = updated_weights
-        self.status = Status.IDLE
+        self.status = Status.IDLE   # Ready for next round training
+
+    def finish_training(self):
+        self.status = Status.COMPLETE

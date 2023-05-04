@@ -44,11 +44,9 @@ class Client:
             elif self.model.status == Status.WAITING_FOR_UPDATES:
                 print("Client status: WAITING_FOR_UPDATES")
                 time.sleep(3)
-
-            # if self.foo_var % 12 == 0:
-            #     self.marker_received = 0
-
-            # time.sleep(1)
+            elif self.model.status == Status.COMPLETE:
+                print("\nClient status: **COMPLETE**")
+                break
 
     def listen_command(self):
         """
@@ -64,7 +62,7 @@ class Client:
 
             if msg['type'] == 'command' and msg['content'] == 'snapshot':
                 if self.marker_received == 0:
-                    self.marker_received = 1
+                    # self.marker_received = 1
                     print("Ready to take snapshot...")
 
                     # Check current values during training
@@ -75,6 +73,8 @@ class Client:
                     send_socket_msg(self.server_socket, 'snapshot_value', snapshot_value)
                 else:
                     send_socket_msg(self.server_socket, 'Snapshot already taken')
+            elif msg['type'] == 'command' and msg['content'] == 'finish':
+                self.model.finish_training()
             # Received merged new model weights from server
             # Continue next round training
             elif msg['type'] == 'updated_weights':

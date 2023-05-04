@@ -41,13 +41,6 @@ class Server:
 
         # Keep sending commands to client
         while True:
-            time.sleep(2)
-
-            # Request to take snapshot
-            print("Request to take snapshot...")
-            command = "snapshot"
-            send_socket_msg(client_socket, 'command', command)
-
             # Receive client response
             response = recv_socket_msg(client_socket)
 
@@ -67,15 +60,35 @@ class Server:
             else:
                 print(response)
 
-            time.sleep(5)
-
     def distribute_model_weights(self, new_weights):
         # Send merged new model weights to all connected clients
         for conn in self.all_socket_connections:
             send_socket_msg(conn, "updated_weights", new_weights)
 
+    def handle_user_command(self):
+        while True:
+            user_input = input("> ")
+
+            if user_input == 'snapshot':
+                print("User command: snapshot")
+                self.send_command(user_input)
+            elif user_input == 'finish':
+                print("User command: stop training")
+                self.send_command(user_input)
+            else:
+                print("Unrecognised user command")
+
+    def send_command(self, command, to_all=True):
+        if to_all:
+            for client_socket in self.all_socket_connections:
+                send_socket_msg(client_socket, 'command', command)
+
+
     def run(self):
         print("Ready to accept incoming connections...")
+
+        user_command_thread = threading.Thread(target=self.handle_user_command, daemon=True)
+        user_command_thread.start()
 
         while True:
             # Establish client connection
