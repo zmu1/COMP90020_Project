@@ -33,11 +33,11 @@ class Server:
         """
         Handle each incoming socket connection
         """
-        print("Start handling connection...")
+        print("[Connection] Start handling connection...")
         self.all_socket_connections.append(client_socket)
 
         # Welcome message
-        send_socket_msg(client_socket, 'welcome', 'Welcome to the server!')
+        send_socket_msg(client_socket, 'connection', 'Welcome to the server!')
 
         # Keep sending commands to client
         while True:
@@ -86,7 +86,7 @@ class Server:
                 send_socket_msg(client_socket, 'command', command)
 
     def run(self):
-        print("Ready to accept incoming connections...")
+        print("[Connection] Ready to accept incoming connections...")
 
         # Thread for listening user input commands
         user_command_thread = threading.Thread(target=self.handle_user_command, daemon=True)
@@ -95,7 +95,7 @@ class Server:
         while True:
             # Establish client connection
             client_socket, addr = self.server_socket.accept()
-            print("Connected to: %s" % str(addr))
+            print("[Connection] Connected to: %s" % str(addr))
 
             # Thread-per-Connection
             client_thread = threading.Thread(target=self.handle_connection, args=(client_socket, addr))

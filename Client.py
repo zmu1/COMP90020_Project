@@ -44,10 +44,10 @@ class Client:
                 if self.model.status != Status.COMPLETE:
                     self.send_model_weights()
             elif self.model.status == Status.WAITING_FOR_UPDATES:
-                print("Client status: WAITING_FOR_UPDATES")
+                print("[Status]: WAITING_FOR_UPDATES")
                 time.sleep(3)
             elif self.model.status == Status.COMPLETE:
-                print("\nClient status: **COMPLETE**")
+                print("\n[Status]: **COMPLETE**")
                 break
 
     def listen_command(self):
@@ -60,7 +60,7 @@ class Client:
             # receive the message
             msg = recv_socket_msg(self.server_socket)
             if msg['type'] == 'command':
-                print("\nCommand:", msg['content'])
+                print("\n[Command] {}".format(msg['content']))
 
                 if msg['content'] == 'snapshot':
                     if self.marker_received == 0:
@@ -82,6 +82,8 @@ class Client:
             # Continue next round training
             elif msg['type'] == 'updated_weights':
                 self.model.receive_updated_weights(msg['content'])
+            elif msg['type'] == 'connection':
+                print("[Connection] {}".format(msg['content']))
             else:
                 print(msg)
 

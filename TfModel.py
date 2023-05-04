@@ -70,6 +70,7 @@ class TfModel:
     def train_model(self):
         print("Start a new round of training...")
         self.status = Status.TRAINING
+        print("[Status]: TRAINING")
 
         reset_epoch_callback = LambdaCallback(on_train_begin=lambda batch: self.update_current_epoch(reset=True))
         update_epoch_callback = LambdaCallback(on_epoch_end=lambda batch, logs: self.update_current_epoch())
@@ -121,6 +122,8 @@ class TfModel:
         print("Received updated weights")
         self.current_weights = updated_weights
         self.status = Status.IDLE   # Ready for next round training
+        print("[Status]: IDLE")
 
     def finish_training(self):
+        print("Been informed to finish, last round of training...")
         self.status = Status.COMPLETE
