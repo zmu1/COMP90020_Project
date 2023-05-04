@@ -40,7 +40,9 @@ class Client:
             if self.model.status == Status.IDLE:
                 self.model.preprocess_data(self.dataset_path)
                 self.model.train_model()
-                self.send_model_weights()
+
+                if self.model.status != Status.COMPLETE:
+                    self.send_model_weights()
             elif self.model.status == Status.WAITING_FOR_UPDATES:
                 print("Client status: WAITING_FOR_UPDATES")
                 time.sleep(3)
@@ -58,23 +60,24 @@ class Client:
             # receive the message
             msg = recv_socket_msg(self.server_socket)
             if msg['type'] == 'command':
-                print("Command:", msg['content'])
+                print("\nCommand:", msg['content'])
 
-            if msg['type'] == 'command' and msg['content'] == 'snapshot':
-                if self.marker_received == 0:
-                    # self.marker_received = 1
-                    print("Ready to take snapshot...")
+                if msg['content'] == 'snapshot':
+                    if self.marker_received == 0:
+                        # self.marker_received = 1
+                        print("Ready to take snapshot...")
 
-                    # Check current values during training
-                    # Return key values as snapshot response
-                    epoch, weights, loss, accuracy = self.check_local_state()
-                    snapshot_value = "Current epoch: {}, loss: {}, accuracy: {}".format(epoch, loss, accuracy)
+                        # Check current values during training
+                        # Return key values as snapshot response
+                        epoch, weights, loss, accuracy = self.check_local_state()
+                        snapshot_value = "Current epoch: {}, loss: {}, accuracy: {}".format(epoch, loss, accuracy)
 
-                    send_socket_msg(self.server_socket, 'snapshot_value', snapshot_value)
-                else:
-                    send_socket_msg(self.server_socket, 'Snapshot already taken')
-            elif msg['type'] == 'command' and msg['content'] == 'finish':
-                self.model.finish_training()
+                        send_socket_msg(self.server_socket, 'snapshot_value', snapshot_value)
+                    else:
+                        send_socket_msg(self.server_socket, 'Snapshot already taken')
+                elif msg['content'] == 'finish':
+                    self.model.finish_training()
+
             # Received merged new model weights from server
             # Continue next round training
             elif msg['type'] == 'updated_weights':

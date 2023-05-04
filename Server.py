@@ -45,10 +45,10 @@ class Server:
             response = recv_socket_msg(client_socket)
 
             if response['type'] == "Snapshot already taken":
-                print(response['type'])
+                print("[Client - {}] {}".format(addr[0], response['type']))
             elif response['type'] == "updated_weights":
                 received_weights = response['content']
-                print("Received weights from client", addr)
+                print("[Client - {}] Received pushed new model weights".format(addr[0]))
 
                 # If return weights != None, means already collected all model weights
                 # Returned weights is the new weights, ready to distribute to all
@@ -56,33 +56,34 @@ class Server:
                 if received_weights is not None:
                     self.distribute_model_weights(received_weights)
             elif response['type'] == "snapshot_value":
-                print("Local value from {}: {}".format(addr, response['content']))
+                print("[Client - {}] Local values: {}".format(addr[0], response['content']))
             else:
-                print(response)
+                print("[Client - {}] Unspecified message: {}".format(addr[0], response))
 
     def distribute_model_weights(self, new_weights):
         # Send merged new model weights to all connected clients
         for conn in self.all_socket_connections:
             send_socket_msg(conn, "updated_weights", new_weights)
+        print("New model weights distributed to all successfully!")
+        print("=================================================\n")
 
     def handle_user_command(self):
         while True:
-            user_input = input("> ")
+            user_input = input()
 
             if user_input == 'snapshot':
-                print("User command: snapshot")
+                print("\nUser command: snapshot")
                 self.send_command(user_input)
             elif user_input == 'finish':
-                print("User command: stop training")
+                print("\nUser command: stop training")
                 self.send_command(user_input)
             else:
-                print("Unrecognised user command")
+                print("\nUnrecognised user command")
 
     def send_command(self, command, to_all=True):
         if to_all:
             for client_socket in self.all_socket_connections:
                 send_socket_msg(client_socket, 'command', command)
-
 
     def run(self):
         print("Ready to accept incoming connections...")

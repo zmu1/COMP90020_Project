@@ -26,9 +26,7 @@ class TfDistributor:
         self.collected_weights.append(weights)
 
         collected_num = self.check_collected_num()
-        print("Successfully collected model weights, existing weights count:", collected_num)
-        # print(weights)
-        # print(np.array(weights, dtype=object).shape)
+        print("\nSuccessfully collected model weights, existing weights count:", collected_num)
 
         if collected_num == self.total_clients:
             print("All client models have been collected, ready to merge...")
@@ -37,28 +35,15 @@ class TfDistributor:
             print("Models collected: {}, waiting for other {} clients"
                   .format(collected_num, self.total_clients - collected_num))
 
-    def get_base_model(self):
-        model = Sequential([
-            Dense(input_dim=30, units=128, activation="relu"),
-            Dense(units=64, activation="relu"),
-            Dropout(0.2),
-            Dense(units=32, activation="relu"),
-            Dropout(0.2),
-            Dense(units=16, activation="relu"),
-            Dropout(0.2),
-            Dense(units=1, activation="sigmoid")])
-        return model
-
     def integrate_model_weights(self):
-        print("Start model weights integration...")
+        print("\n========== Model Weights Integration ============")
+        # print("Start model weights integration...")
 
         # Merge weights
         sum_weights = None
         for weights in self.collected_weights:
             if sum_weights is None:
                 sum_weights = np.array(weights, dtype=object)
-                with open('original_weights.txt', 'w') as file:
-                    file.write(str(sum_weights))
             else:
                 sum_weights += np.array(weights, dtype=object)
 
@@ -66,10 +51,6 @@ class TfDistributor:
         merged_weights = sum_weights / self.total_clients
         self.latest_model_weights = merged_weights
 
-        with open('merged_weights.txt', 'w') as file:
-            file.write(str(merged_weights))
-
-        # print(np.array(merged_weights, dtype=object).shape)
         print("Model weights merged successfully!")
 
         self.reset_collected_num()
