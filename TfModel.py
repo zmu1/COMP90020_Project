@@ -68,6 +68,9 @@ class TfModel:
         return model
 
     def train_model(self):
+        print("Start model training...")
+        self.status = Status.TRAINING
+
         reset_epoch_callback = LambdaCallback(on_train_begin=lambda batch: self.update_current_epoch(reset=True))
         update_epoch_callback = LambdaCallback(on_epoch_end=lambda batch, logs: self.update_current_epoch())
         update_weights_callback = LambdaCallback(on_epoch_end=lambda batch, logs: self.update_current_weights())
@@ -78,7 +81,7 @@ class TfModel:
 
         if self.current_weights is not None:
             self.model.set_weights(self.current_weights)
-            print("Train use updated weights")
+            print("Train use updated weights!")
 
         self.model.fit(self.X_train, self.y_train, epochs=50, batch_size=100, callbacks=[reset_epoch_callback,
                                                                                           update_epoch_callback,
@@ -111,5 +114,6 @@ class TfModel:
         return self.current_loss, self.current_accuracy
 
     def receive_updated_weights(self, updated_weights):
-        self.current_weights = updated_weights
         print("Received updated weights")
+        self.current_weights = updated_weights
+        self.status = Status.IDLE
