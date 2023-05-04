@@ -87,6 +87,7 @@ class Server:
     def run(self):
         print("Ready to accept incoming connections...")
 
+        # Thread for listening user input commands
         user_command_thread = threading.Thread(target=self.handle_user_command, daemon=True)
         user_command_thread.start()
 
