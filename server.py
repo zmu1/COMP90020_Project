@@ -26,18 +26,25 @@ class Server:
             return
         else:
             for worker_ip in self.worker_list:
-                send_thread = SendingThread(worker_ip, self.send_port, self, "init_snapshot")
+                send_thread = SendingThread(worker_ip, self.send_port, self, "marker")
                 send_thread.start()
                 send_thread.join()
 
                 if self.marker == 0:
                     self.marker = 1
 
+    def terminate_snapshot(self):
+        if self.snapshot_counter == 2:
+            for worker_ip in self.worker_list:
+                terminate_thread = SendingThread(worker_ip, 9999, self, "terminate")
+                terminate_thread.start()
+                # terminate_thread.join()
+
     def start(self):
         self.recv_thread.start()
 
         # Server initialize snapshot algorithm
-        time.sleep(15)
+        time.sleep(10)
         self.initialize_snapshot()
 
         # self.send_thread.start()

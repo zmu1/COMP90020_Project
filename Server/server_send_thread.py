@@ -20,13 +20,19 @@ class SendingThread(threading.Thread):
         client_socket.connect((client_ip, 9999))
 
         if self.cmd == "marker":
-            snapshot_msg = util.construct_msg(self.cmd, "Server Has Recorded Local State")
-            client_socket.sendall(snapshot_msg)
+            if self.server_instance.marker == 0:
+                print("------From ({}:{}) -> Snapshot Initialized------\n".format(self.host, self.port))
+                snapshot_msg = util.construct_msg(self.cmd, "Record Local State")
+                client_socket.sendall(snapshot_msg)
 
-        elif self.cmd == "init_snapshot" and self.server_instance.marker == 0:
-            print("------From ({}:{}) -> Snapshot Initialized------\n".format(self.host, self.port))
-            snapshot_msg = util.construct_msg(self.cmd, "Record Local State")
-            client_socket.sendall(snapshot_msg)
+            else:
+                snapshot_msg = util.construct_msg(self.cmd, "Server Has Recorded Local State")
+                client_socket.sendall(snapshot_msg)
+
+        # elif self.cmd == "init_snapshot" and self.server_instance.marker == 0:
+        #     print("------From ({}:{}) -> Snapshot Initialized------\n".format(self.host, self.port))
+        #     snapshot_msg = util.construct_msg(self.cmd, "Record Local State")
+        #     client_socket.sendall(snapshot_msg)
 
         elif self.cmd == "terminate":
             terminate_msg = util.construct_msg(self.cmd, "Snapshot Finished")
@@ -63,11 +69,7 @@ class SendingThread(threading.Thread):
                     print("------Received from ({}:{}) -> {}------\n".format(self.host, self.port,
                                                                              received_msg["content"]))
 
-        print("\n\n\n", self.server_instance.snapshot_counter)
-        if self.server_instance.snapshot_counter == 2:
-            terminate_thread = SendingThread(self.host, 9999, self.server_instance, "terminate")
-            terminate_thread.start()
-            terminate_thread.join()
+        # print("\n\n\n", self.server_instance.snapshot_counter)
 
         if client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) != 0:
             client_socket.close()

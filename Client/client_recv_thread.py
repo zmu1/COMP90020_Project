@@ -18,19 +18,22 @@ class ReceivingThread(threading.Thread):
 
         first_out = self.client_instance.incoming_messages.pop()
         if first_out:
-            if first_out["type"] == "marker":
+            if first_out["type"] == "welcome":
                 print("------Received from ({}:{}) -> {}------\n".format(addr[0], addr[1], received_msg["content"]))
 
-                if self.client_instance.marker == 0:
-                    snapshot_msg = util.construct_msg("state_recorded", str(self.client_instance.foo_var))
-                    client_socket.send(snapshot_msg)
-                else:
-                    self.client_instance.channel_state = self.client_instance.incoming_messages
+            # elif first_out["type"] == "marker":
+            #     print("------Received from ({}:{}) -> {}------\n".format(addr[0], addr[1], received_msg["content"]))
+            #
+            #     if self.client_instance.marker == 0:
+            #         snapshot_msg = util.construct_msg("state_recorded", str(self.client_instance.foo_var))
+            #         client_socket.send(snapshot_msg)
+            #     else:
+            #         self.client_instance.channel_state = self.client_instance.incoming_messages
+            #
+            #         reply = util.construct_msg("snapshot_already_taken", str(self.client_instance.incoming_messages))
+            #         client_socket.send(reply)
 
-                    reply = util.construct_msg("snapshot_already_taken", str(self.client_instance.incoming_messages))
-                    client_socket.send(reply)
-
-            elif first_out["type"] == "init_snapshot":
+            elif first_out["type"] == "marker":
                 print("------Received from ({}:{}) -> {}------\n".format(addr[0], addr[1], received_msg["content"]))
 
                 if self.client_instance.marker == 0:
@@ -55,7 +58,7 @@ class ReceivingThread(threading.Thread):
                 self.client_instance.incoming_messages = []  # Msg in the channel
                 self.client_instance.channel_state = []  # Record Channel State
 
-        client_socket.close()
+        # client_socket.close()
 
     def run(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
