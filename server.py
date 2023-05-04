@@ -46,6 +46,7 @@ class Server:
         # Server initialize snapshot algorithm
         time.sleep(10)
         self.initialize_snapshot()
+        self.terminate_snapshot()
 
         # self.send_thread.start()
 
