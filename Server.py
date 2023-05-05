@@ -61,11 +61,8 @@ class Server:
                     if not self.local_state_recorded:
                         # Step 1 - record own local state
                         print("\n[Snapshot] Condition 1 - Ready to record local state")
-
                         # Step 2 - start recording incoming messages
-
                         # Step 3 - send marker messages to all (back to server)
-
                     # Condition 2 - local state recorded
                     else:
                         print("\n[Snapshot] Condition 2 - Local state already recorded")
@@ -76,8 +73,6 @@ class Server:
                     # Check if received marker message from all clients
                     # If received, client channel recording is False
                     if self.all_clients_recorded():
-                        print("\n[Snapshot] All clients have recorded their states")
-                        print("[Snapshot] Initiate local states collection...")
                         self.initiate_snapshot_collection()
 
             # Received returned local states for collection
@@ -85,7 +80,12 @@ class Server:
                 print("\n[Snapshot] [Client - {}] Local state received".format(addr[0]))
                 client_local_state = response['content']
                 self.collected_snapshot.append(client_local_state)
-                print("[Snapshot] Received local state count:", len(self.collected_snapshot))
+
+                collected_count = len(self.collected_snapshot)
+                print("[Snapshot] Received local state count:", collected_count)
+                if collected_count == CLIENT_NUM:
+                    print("[Snapshot] Collected all client local states")
+                    print("=====================================================\n")
 
             elif response['type'] == "updated_weights":
                 received_weights = response['content']
@@ -115,6 +115,9 @@ class Server:
             if user_input == 'snapshot':
                 print("\nUser command: snapshot")
                 self.initialise_snapshot()
+            elif user_input == 'summary':
+                print("\nUser command: summary")
+                self.show_snapshot_summary()
             elif user_input == 'check':
                 print("\nUser command: check")
                 self.send_command(user_input)
@@ -187,9 +190,23 @@ class Server:
         return True
 
     def initiate_snapshot_collection(self):
+        print("\n======== Initiate Local State Collection ==========")
+        print("[Snapshot] All clients have recorded their states")
+        print("[Snapshot] Initiate local states collection...")
         # Broadcast to collect local states
         self.broadcast_snapshot_message('collect')
         # reset snapshot related attributed
+
+    def show_snapshot_summary(self):
+        if len(self.collected_snapshot) != CLIENT_NUM:
+            print("[Summary] Snapshot not yet available...")
+
+
+        # Show server local state
+
+        # Show client local states
+        for client_local_state in self.collected_snapshot:
+            client_local_state.show_state_summary()
 
     def run(self):
         print("[Connection] Ready to accept incoming connections...")

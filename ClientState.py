@@ -3,6 +3,7 @@ class ClientState:
         # Client config
         self.host = client.host
         self.port = client.port
+        self.ip = client.ip
 
         # Client local dataset
         self.dataset_path = client.dataset_path
@@ -20,3 +21,9 @@ class ClientState:
         print("[Snapshot] Current accuracy:", self.model.current_accuracy)
         # print("[Snapshot] Current weights:", self.model.current_weights)
 
+    def show_state_summary(self):
+        print("[Summary] Client - {}".format(self.ip))
+        print("Dataset:", self.dataset_path)
+        print("Current epoch:", self.model.current_epoch)
+        print("Current loss:", self.model.current_loss)
+        print("Current accuracy:", self.model.current_accuracy)

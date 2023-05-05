@@ -15,6 +15,7 @@ class Client:
         # Get local host name and port number
         self.host = socket.gethostname()
         self.port = 5999
+        self.ip = socket.gethostbyname(self.host)
 
         # Connect to the server
         self.server_socket.connect((self.host, self.port))
