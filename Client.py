@@ -59,13 +59,14 @@ class Client:
                 print("\n[Status]: **COMPLETE**")
                 break
 
-    def store_buffer_message(self, server_socket):
+    def store_buffer_message(self):
         print("Buffer thread running for", self.ip)
 
         # Keep listening to response from client
         while True:
             # Put incoming messages into buffer queue
-            message = recv_socket_msg(server_socket)
+            message = recv_socket_msg(self.server_socket)
+            # print(message)
             self.buffer_message.append(message)
 
             # Snapshot not started
@@ -79,7 +80,7 @@ class Client:
                 # Return marker received
                 # End of channel recording
                 if message['type'] == 'snapshot' and message['content'] == 'marker':
-                    self.local_state_recorded = True
+                    # self.local_state_recorded = True
                     continue
 
                 self.channel_state.append(message)
@@ -99,7 +100,7 @@ class Client:
         print("Ready for new commands...")
 
         # Thread to buffer incoming messages
-        buffer_thread = threading.Thread(target=self.store_buffer_message, args=(self.server_socket))
+        buffer_thread = threading.Thread(target=self.store_buffer_message)
         buffer_thread.start()
 
         # Queue to buffer incoming messages
