@@ -1,5 +1,6 @@
 import threading
 import socket
+import argparse
 import time
 
 from CommHelper import send_socket_msg, recv_socket_msg
@@ -8,14 +9,14 @@ from ClientState import ClientState
 
 
 class Client:
-    def __init__(self):
+    def __init__(self, server_host, port):
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # Get local host name and port number
-        self.host = socket.gethostname()
-        self.port = 5999
+        self.host = server_host
+        self.port = port
         self.ip = socket.gethostbyname(socket.gethostname())
 
         # Connect to the server
@@ -128,7 +129,7 @@ class Client:
             else:
                 print(msg)
 
-    def run(self):
+    def start(self):
         # Thread for ML training
         train_thread = threading.Thread(target=self.train)
         train_thread.start()
@@ -167,6 +168,15 @@ class Client:
         print("[Snapshot] Reset snapshot attributes")
 
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Mock Worker Nodes in Federated learning")
+    parser.add_argument("--server", type=str, help="IP address of server nod")
+    parser.add_argument("--port", type=int, help="Port used for communication")
 
-client = Client()
-client.run()
+    args = parser.parse_args()
+
+    server_host = args.server
+    port = args.port
+
+    client = Client(server_host, port)
+    client.start()
