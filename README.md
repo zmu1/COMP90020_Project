@@ -82,3 +82,13 @@ In addition, the algorithm has been adapted into many real-world applications, s
 ### Folders
 - `ml` - Contains some Jupyter Notebook for tensorflow experiment & credit card datasets
 - `pretrained_model` - A exported tensorflow model for experiment
+
+## Application Screenshots
+### Model Training
+![Model Training](screenshot/model_training.png)
+
+### Initiate Snapshot
+![Initiate Snapshot](screenshot/initiate_snapshot.png)
+
+### Collect & Merge Local States
+![Collect & Merge Local States](screenshot/collect_merge_local_states.png)
