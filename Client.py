@@ -11,6 +11,7 @@ class Client:
     def __init__(self):
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # Get local host name and port number
         self.host = socket.gethostname()

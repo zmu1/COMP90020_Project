@@ -13,6 +13,7 @@ class Server:
     def __init__(self):
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # Get local host name and port number
         self.host = socket.gethostname()
@@ -30,27 +31,72 @@ class Server:
         self.model_distributor = TfDistributor()
         self.model_distributor.set_total_clients(CLIENT_NUM)
 
+        # Buffer message queue for each client
+        self.buffer_message = {}
+
         # Snapshot attributes
         self.local_state_recorded = False
         self.local_state = None
-        self.channel_state = None
-        self.channel_recording_status = None
+        self.channel_state = {}
+        self.channel_recording_status = {}
         self.collected_snapshot = []
+
+    def store_buffer_message(self, client_socket, addr):
+        ip = addr[0]
+
+        print("Buffer thread running for", ip)
+
+        # Keep listening to response from client
+        while True:
+            # Put incoming messages into buffer queue
+            message = recv_socket_msg(client_socket)
+            if ip in self.buffer_message.keys():
+                self.buffer_message[ip].append(message)
+            else:
+                self.buffer_message[ip] = [message]
+
+            # Snapshot not started
+            # Skip channel recording
+            if len(self.channel_recording_status.keys()) == 0:
+                continue
+
+            # If recording for the channel
+            if self.channel_recording_status[ip]:
+                if ip in self.channel_state.keys():
+                    self.channel_state[ip].append(message)
+                else:
+                    self.channel_state[ip] = [message]
+
+            # print("New incoming message from", ip)
+            # self.check_channel_state()
 
     def handle_connection(self, client_socket, addr):
         """
         Handle each incoming socket connection
         """
+        # Register the client connection
         print("[Connection] Start handling connection...")
         self.all_socket_connections.append((client_socket, addr))
+        self.buffer_message[addr[0]] = []
+
+        # Thread to buffer incoming messages
+        buffer_thread = threading.Thread(target=self.store_buffer_message, args=(client_socket, addr))
+        buffer_thread.start()
 
         # Welcome message
         send_socket_msg(client_socket, 'connection', 'Welcome to the server!')
 
-        # Keep listening to response from client
+        # Queue to buffer incoming messages
+        message_queue = self.buffer_message[addr[0]]
+
+        # Keep processing buffered message
         while True:
-            # Receive client response
-            response = recv_socket_msg(client_socket)
+            # No new message, skip
+            if len(message_queue) == 0:
+                continue
+
+            # Get the next message
+            response = message_queue.pop()
 
             if response['type'] == "snapshot":
                 # Received marker message
@@ -201,6 +247,7 @@ class Server:
         print("\n================ Snapshot Summary =================")
         if len(self.collected_snapshot) != CLIENT_NUM:
             print("[Summary] Snapshot not yet available...")
+            print("=====================================================\n")
             return
 
         # Show server local state
@@ -220,7 +267,7 @@ class Server:
         self.local_state_recorded = False
         self.local_state = None
         self.channel_state = None
-        self.channel_recording_status = None
+        self.channel_recording_status = {}
         self.collected_snapshot = []
 
         # Inform clients to reset too
