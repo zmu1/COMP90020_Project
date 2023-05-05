@@ -9,7 +9,7 @@ from ClientState import ClientState
 
 
 class Client:
-    def __init__(self, server_host, port):
+    def __init__(self, server_host, port, data_path):
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -23,7 +23,7 @@ class Client:
         self.server_socket.connect((self.host, self.port))
 
         # Initialise tensorflow model
-        self.dataset_path = "ml/credit_batch_1.csv"
+        self.dataset_path = data_path
         self.model = TfModel()
 
         # Buffer message queue for each client
@@ -224,11 +224,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Mock Worker Nodes in Federated learning")
     parser.add_argument("--server", type=str, help="IP address of server nod")
     parser.add_argument("--port", type=int, help="Port used for communication")
+    parser.add_argument("--data", type=str, help="File path of dataset")
 
     args = parser.parse_args()
 
     server_host = args.server
     port = args.port
+    data_path = args.data
 
-    client = Client(server_host, port)
+    client = Client(server_host, port, data_path)
     client.start()
