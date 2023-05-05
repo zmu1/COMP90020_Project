@@ -83,6 +83,18 @@ In addition, the algorithm has been adapted into many real-world applications, s
 - `ml` - Contains some Jupyter Notebook for tensorflow experiment & credit card datasets
 - `pretrained_model` - A exported tensorflow model for experiment
 
+## How to Run
+1. Create a Docker network with command `docker create network <network_name>`
+2. Launch several Docker container attached to that network (base: `Ubuntu`)
+3. Install Python & packages listed in `requirements.txt`
+4. Copy the project folder into containers using `docker cp` command
+5. Enter Docker containers and direct to project folder
+6. Launch server - `python Server.py --port <port_number>`
+7. Launch client - `python Client.py --server <server_ip> --port <port_number> --data <dataset_file_path>`
+### Example Commands
+- `python Server.py --port 5999`
+- `python Client.py --server 172.19.0.2 --port 5999 --data ml/credit_batch_2.csv`
+
 ## Application Screenshots
 ### Model Training
 ![Model Training](screenshot/model_training.png)
