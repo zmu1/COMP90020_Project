@@ -4,9 +4,6 @@ import socket
 from CommHelper import send_socket_msg, recv_socket_msg
 
 
-# import util
-
-
 class SendingThread(threading.Thread):
     def __init__(self, host, port, client_instance, cmd, content):
         threading.Thread.__init__(self)

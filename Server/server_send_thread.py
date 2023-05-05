@@ -1,8 +1,6 @@
 import socket
 import threading
-import time
 
-# import util
 from CommHelper import send_socket_msg, recv_socket_msg
 
 

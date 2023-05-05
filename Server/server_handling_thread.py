@@ -1,7 +1,6 @@
 import threading
-from CommHelper import send_socket_msg, recv_socket_msg
-# import util
 
+from CommHelper import send_socket_msg, recv_socket_msg
 from Server.server_send_thread import SendingThread
 
 
@@ -20,10 +19,6 @@ class HandlingThread(threading.Thread):
         self.handle_connection(self.client_socket, self.addr, self.server_instance)
 
     def distribute_model_weights(self, new_weights):
-        # Send merged new model weights to all connected clients
-        # for conn in self.all_socket_connections:
-        #     send_socket_msg(conn, "updated_weights", new_weights)
-
         for worker_ip in self.server_instance.worker_list:
             send_thread = SendingThread(worker_ip, self.port, self.server_instance,
                                         "update_weights", new_weights)
@@ -33,10 +28,6 @@ class HandlingThread(threading.Thread):
         # print("=================================================\n")
 
     def handle_connection(self, client_socket, addr, server_instance):
-        # client_msg = client_socket.recv(1024)
-        # received_msg = util.parse_msg(client_msg)
-        # self.channel_msg.append(received_msg)
-
         client_msg = recv_socket_msg(client_socket)
         self.channel_msg.append(client_msg)
 
