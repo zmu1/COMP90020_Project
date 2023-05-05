@@ -67,8 +67,8 @@ class Server:
 
     def distribute_model_weights(self, new_weights):
         # Send merged new model weights to all connected clients
-        for conn in self.all_socket_connections:
-            send_socket_msg(conn, "updated_weights", new_weights)
+        for client_socket, addr in self.all_socket_connections:
+            send_socket_msg(client_socket, "updated_weights", new_weights)
         print("New model weights distributed to all successfully!")
         print("=================================================\n")
 
