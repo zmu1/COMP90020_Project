@@ -73,14 +73,24 @@ class Client:
 
                     # Condition 1 - local state not recorded
                     if not self.local_state_recorded:
+                        # Step 1 - record own local state
                         print("\n[Snapshot] Condition 1 - Ready to record local state")
                         self.record_local_state()
                         self.local_state_recorded = True
 
                         self.check_local_state()
+
+                        # Step 2 - start recording incoming messages
+                        # Skip
+
+                        # Step 3 - send marker messages to all (back to server)
+                        send_socket_msg(self.server_socket, 'snapshot', 'marker')
+
                     # Condition 2 - local state recorded
                     else:
                         print("\n[Snapshot] Condition 2 - Local state already recorded")
+                        # Step 1 - stop recording incoming messages
+                        # Skip
 
             # User command operations
             elif msg['type'] == 'command':

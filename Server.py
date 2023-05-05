@@ -11,10 +11,6 @@ CLIENT_NUM = 2
 
 class Server:
     def __init__(self):
-        # Attach a model distributor
-        self.model_distributor = TfDistributor()
-        self.model_distributor.set_total_clients(CLIENT_NUM)
-
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -28,6 +24,10 @@ class Server:
         # Set the maximum number of connections, after which the queue is full
         self.server_socket.listen(5)
         self.all_socket_connections = []
+
+        # Attach a model distributor
+        self.model_distributor = TfDistributor()
+        self.model_distributor.set_total_clients(CLIENT_NUM)
 
         # Snapshot attributes
         self.local_state_recorded = False
@@ -49,8 +49,28 @@ class Server:
             # Receive client response
             response = recv_socket_msg(client_socket)
 
-            if response['type'] == "Snapshot already taken":
-                print("[Client - {}] {}".format(addr[0], response['type']))
+            if response['type'] == "snapshot":
+                # Received marker message
+                if response['content'] == 'marker':
+                    print("\n[Snapshot] [Client - {}] Marker message received".format(addr[0]))
+
+                    # Condition 1 - local state not recorded
+                    # Skip (when received, server must has already recorded its local state)
+                    if not self.local_state_recorded:
+                        # Step 1 - record own local state
+                        print("\n[Snapshot] Condition 1 - Ready to record local state")
+
+                        # Step 2 - start recording incoming messages
+
+                        # Step 3 - send marker messages to all (back to server)
+
+                    # Condition 2 - local state recorded
+                    else:
+                        print("\n[Snapshot] Condition 2 - Local state already recorded")
+                        # Step 1 - stop recording incoming messages
+                        print("[Snapshot] Stop recording incoming messages from {}".format(addr[0]))
+                        self.check_channel_state()
+
             elif response['type'] == "updated_weights":
                 received_weights = response['content']
                 print("[Client - {}] Received pushed new model weights".format(addr[0]))
@@ -121,6 +141,8 @@ class Server:
             self.channel_state[addr[0]] = []
             print("[Snapshot] Start recording channel from {}".format(addr[0]))
 
+        self.check_channel_state()
+
     def broadcast_marker_message(self):
         for client_socket, addr in self.all_socket_connections:
             send_socket_msg(client_socket, 'snapshot', 'marker')
@@ -128,6 +150,10 @@ class Server:
 
     # def stop_incoming_recording(self, client_socket, addr):
     #     return
+
+    def check_channel_state(self):
+        for client_ip in self.channel_state.keys():
+            print("[Snapshot] Channel state from {} : {}".format(client_ip, self.channel_state[client_ip]))
 
     def run(self):
         print("[Connection] Ready to accept incoming connections...")
