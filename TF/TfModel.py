@@ -68,7 +68,7 @@ class TfModel:
         return model
 
     def train_model(self):
-        print("Start a new round of training...")
+        print("[Client Training] Start a new round of training...")
         self.status = Status.TRAINING
         print("[Status]: TRAINING")
 
@@ -84,7 +84,7 @@ class TfModel:
             self.model.set_weights(self.current_weights)
             print("Train use updated weights!")
 
-        self.model.fit(self.X_train, self.y_train, epochs=100, batch_size=100, callbacks=[reset_epoch_callback,
+        self.model.fit(self.X_train, self.y_train, epochs=50, batch_size=100, callbacks=[reset_epoch_callback,
                                                                                           update_epoch_callback,
                                                                                           update_weights_callback,
                                                                                           update_performance_callback])

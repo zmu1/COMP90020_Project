@@ -12,7 +12,7 @@ from keras.callbacks import LambdaCallback, Callback
 
 ############### Preprocessing ##################
 
-data = pd.read_csv('ml/credit_batch_1.csv')
+data = pd.read_csv('../ml/credit_batch_1.csv')
 
 current_epoch = 0
 current_weights = None
