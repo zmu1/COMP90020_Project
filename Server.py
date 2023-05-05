@@ -99,6 +99,7 @@ class Server:
         while True:
             # No new message, skip
             if len(message_queue) == 0:
+                time.sleep(0.1)
                 continue
 
             # Get the next message
