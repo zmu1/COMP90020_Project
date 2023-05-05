@@ -62,6 +62,12 @@ class Server:
 
             # If recording for the channel
             if self.channel_recording_status[ip]:
+
+                # Return marker received
+                # End of channel recording
+                if self.local_state_recorded and message['type'] == 'snapshot' and message['content'] == 'marker':
+                    continue
+
                 if ip in self.channel_state.keys():
                     self.channel_state[ip].append(message)
                 else:
