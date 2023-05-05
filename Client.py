@@ -99,6 +99,11 @@ class Client:
                     print("\n[Snapshot] Snapshot collection stage")
                     self.send_local_state()
 
+                # Reset for next snapshot
+                elif msg['content'] == 'reset':
+                    print("\n[Snapshot] Reset for next snapshot")
+                    self.snapshot_reset()
+
             # User command operations
             elif msg['type'] == 'command':
                 print("\n[Command] {}".format(msg['content']))
@@ -152,6 +157,13 @@ class Client:
     def send_local_state(self):
         send_socket_msg(self.server_socket, 'state', self.local_state)
         print("\n[Snapshot] Send back local state recorded")
+
+    def snapshot_reset(self):
+        # Reset snapshot attributes
+        self.local_state_recorded = False
+        self.local_state = None
+        self.channel_state = None
+        print("[Snapshot] Reset snapshot attributes")
 
 
 

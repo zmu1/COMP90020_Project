@@ -196,12 +196,12 @@ class Server:
         print("[Snapshot] Initiate local states collection...")
         # Broadcast to collect local states
         self.broadcast_snapshot_message('collect')
-        # reset snapshot related attributed
 
     def show_snapshot_summary(self):
         print("\n================ Snapshot Summary =================")
         if len(self.collected_snapshot) != CLIENT_NUM:
             print("[Summary] Snapshot not yet available...")
+            return
 
         # Show server local state
         self.local_state.show_state_summary()
@@ -211,6 +211,21 @@ class Server:
             print("-----")
             client_local_state.show_state_summary()
         print("=====================================================\n")
+
+        # Reset snapshot related attributed
+        self.snapshot_reset()
+
+    def snapshot_reset(self):
+        # Reset snapshot attributes
+        self.local_state_recorded = False
+        self.local_state = None
+        self.channel_state = None
+        self.channel_recording_status = None
+        self.collected_snapshot = []
+
+        # Inform clients to reset too
+        self.broadcast_snapshot_message('reset')
+        print("[Snapshot] Reset snapshot attributes")
 
     def run(self):
         print("[Connection] Ready to accept incoming connections...")
