@@ -3,7 +3,7 @@ class ServerState:
         # Server config
         self.host = server.host
         self.port = server.port
-        self.ip = server.ip
+        self.ip = server.host
 
         # Existing connections
         self.all_socket_connections = server.all_socket_connections

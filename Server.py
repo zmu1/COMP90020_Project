@@ -1,5 +1,6 @@
 import threading
 import socket
+import argparse
 import time
 
 from CommHelper import send_socket_msg, recv_socket_msg
@@ -10,15 +11,14 @@ CLIENT_NUM = 2
 
 
 class Server:
-    def __init__(self):
+    def __init__(self, port):
         # Create a socket object
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # Get local host name and port number
-        self.host = socket.gethostname()
-        self.port = 5999
-        self.ip = socket.gethostbyname(self.host)
+        self.host = socket.gethostbyname(socket.gethostname())
+        self.port = port
 
         # Bind the port
         self.server_socket.bind((self.host, self.port))
@@ -99,6 +99,7 @@ class Server:
         while True:
             # No new message, skip
             if len(message_queue) == 0:
+                time.sleep(0.1)
                 continue
 
             # Get the next message
@@ -280,7 +281,7 @@ class Server:
         self.broadcast_snapshot_message('reset')
         print("[Snapshot] Reset snapshot attributes")
 
-    def run(self):
+    def start(self):
         print("[Connection] Ready to accept incoming connections...")
 
         # Thread for listening user input commands
@@ -297,5 +298,13 @@ class Server:
             client_thread.start()
 
 
-server = Server()
-server.run()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Mock Worker Nodes in Federated learning")
+    parser.add_argument("--port", type=int, help="Port used for communication")
+
+    args = parser.parse_args()
+
+    port = args.port
+
+    server = Server(port)
+    server.start()
