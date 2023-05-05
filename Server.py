@@ -3,6 +3,7 @@ import socket
 import time
 
 from CommHelper import send_socket_msg, recv_socket_msg
+from ServerState import ServerState
 from TfDistributor import TfDistributor
 
 CLIENT_NUM = 2
@@ -26,20 +27,24 @@ class Server:
 
         # Set the maximum number of connections, after which the queue is full
         self.server_socket.listen(5)
-
         self.all_socket_connections = []
+
+        # Snapshot attributes
+        self.local_state_recorded = False
+        self.local_state = None
+        self.channel_state = None
 
     def handle_connection(self, client_socket, addr):
         """
         Handle each incoming socket connection
         """
         print("[Connection] Start handling connection...")
-        self.all_socket_connections.append(client_socket)
+        self.all_socket_connections.append((client_socket, addr))
 
         # Welcome message
         send_socket_msg(client_socket, 'connection', 'Welcome to the server!')
 
-        # Keep sending commands to client
+        # Keep listening to response from client
         while True:
             # Receive client response
             response = recv_socket_msg(client_socket)
@@ -55,7 +60,7 @@ class Server:
                 received_weights = self.model_distributor.collect_model_weights(received_weights)
                 if received_weights is not None:
                     self.distribute_model_weights(received_weights)
-            elif response['type'] == "snapshot_value":
+            elif response['type'] == "check_value":
                 print("[Client - {}] Local values: {}".format(addr[0], response['content']))
             else:
                 print("[Client - {}] Unspecified message: {}".format(addr[0], response))
@@ -73,6 +78,9 @@ class Server:
 
             if user_input == 'snapshot':
                 print("\nUser command: snapshot")
+                self.initialise_snapshot()
+            elif user_input == 'check':
+                print("\nUser command: check")
                 self.send_command(user_input)
             elif user_input == 'finish':
                 print("\nUser command: stop training")
@@ -82,8 +90,44 @@ class Server:
 
     def send_command(self, command, to_all=True):
         if to_all:
-            for client_socket in self.all_socket_connections:
+            for client_socket, addr in self.all_socket_connections:
                 send_socket_msg(client_socket, 'command', command)
+
+    def initialise_snapshot(self):
+        # Step 1 - record own local state
+        print("\n[Snapshot] Step 1")
+        self.record_local_state()
+
+        # Step 2 - start recording incoming messages
+        print("\n[Snapshot] Step 2")
+        self.start_incoming_recording()
+
+        # Step 3 - send marker messages to all
+        print("\n[Snapshot] Step 3")
+        self.broadcast_marker_message()
+
+    def record_local_state(self):
+        print("[Snapshot] Start recording local state")
+        self.local_state = ServerState(self)
+        self.local_state_recorded = True
+        print("[Snapshot] Local state recorded successfully")
+
+    def start_incoming_recording(self):
+        print("[Snapshot] Start recording incoming messages")
+
+        # Initialise channel state
+        self.channel_state = {}
+        for client_socket, addr in self.all_socket_connections:
+            self.channel_state[addr[0]] = []
+            print("[Snapshot] Start recording channel from {}".format(addr[0]))
+
+    def broadcast_marker_message(self):
+        for client_socket, addr in self.all_socket_connections:
+            send_socket_msg(client_socket, 'snapshot', 'marker')
+        print("[Snapshot] Marker messages are sent")
+
+    # def stop_incoming_recording(self, client_socket, addr):
+    #     return
 
     def run(self):
         print("[Connection] Ready to accept incoming connections...")
