@@ -17,6 +17,7 @@ class Server:
         # Get local host name and port number
         self.host = socket.gethostname()
         self.port = 5999
+        self.ip = socket.gethostbyname(self.host)
 
         # Bind the port
         self.server_socket.bind((self.host, self.port))
@@ -198,15 +199,18 @@ class Server:
         # reset snapshot related attributed
 
     def show_snapshot_summary(self):
+        print("\n================ Snapshot Summary =================")
         if len(self.collected_snapshot) != CLIENT_NUM:
             print("[Summary] Snapshot not yet available...")
 
-
         # Show server local state
+        self.local_state.show_state_summary()
 
         # Show client local states
         for client_local_state in self.collected_snapshot:
+            print("-----")
             client_local_state.show_state_summary()
+        print("=====================================================\n")
 
     def run(self):
         print("[Connection] Ready to accept incoming connections...")

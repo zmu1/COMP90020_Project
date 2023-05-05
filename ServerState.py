@@ -3,6 +3,7 @@ class ServerState:
         # Server config
         self.host = server.host
         self.port = server.port
+        self.ip = server.ip
 
         # Existing connections
         self.all_socket_connections = server.all_socket_connections
@@ -12,3 +13,9 @@ class ServerState:
     def check(self):
         print(self.host, self.port)
         print(self.all_socket_connections)
+
+    def show_state_summary(self):
+        print("[Summary] Server - {}".format(self.ip))
+        print("Connected client count:", len(self.all_socket_connections))
+        print("Connected clients:", [conn[1][0] for conn in self.all_socket_connections])
+
