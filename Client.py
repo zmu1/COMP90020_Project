@@ -92,6 +92,11 @@ class Client:
                         # Step 1 - stop recording incoming messages
                         # Skip
 
+                # Received collect message
+                # Snapshot collection
+                elif msg['content'] == 'collect':
+                    print("\n[Snapshot] Snapshot collection stage")
+
             # User command operations
             elif msg['type'] == 'command':
                 print("\n[Command] {}".format(msg['content']))

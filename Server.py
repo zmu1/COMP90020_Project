@@ -33,6 +33,7 @@ class Server:
         self.local_state_recorded = False
         self.local_state = None
         self.channel_state = None
+        self.channel_recording_status = None
 
     def handle_connection(self, client_socket, addr):
         """
@@ -55,7 +56,7 @@ class Server:
                     print("\n[Snapshot] [Client - {}] Marker message received".format(addr[0]))
 
                     # Condition 1 - local state not recorded
-                    # Skip (when received, server must has already recorded its local state)
+                    # Skip (when received, server must have already recorded its local state)
                     if not self.local_state_recorded:
                         # Step 1 - record own local state
                         print("\n[Snapshot] Condition 1 - Ready to record local state")
@@ -68,8 +69,15 @@ class Server:
                     else:
                         print("\n[Snapshot] Condition 2 - Local state already recorded")
                         # Step 1 - stop recording incoming messages
-                        print("[Snapshot] Stop recording incoming messages from {}".format(addr[0]))
+                        self.stop_incoming_recording(client_socket, addr)
                         self.check_channel_state()
+
+                    # Check if received marker message from all clients
+                    # If received, client channel recording is False
+                    if self.all_clients_recorded():
+                        print("\n[Snapshot] All clients have recorded their states")
+                        print("[Snapshot] Initiate local states collection...")
+                        self.initiate_snapshot_collection()
 
             elif response['type'] == "updated_weights":
                 received_weights = response['content']
@@ -124,7 +132,7 @@ class Server:
 
         # Step 3 - send marker messages to all
         print("\n[Snapshot] Step 3")
-        self.broadcast_marker_message()
+        self.broadcast_snapshot_message('marker')
 
     def record_local_state(self):
         print("[Snapshot] Start recording local state")
@@ -137,23 +145,41 @@ class Server:
 
         # Initialise channel state
         self.channel_state = {}
+        self.channel_recording_status = {}
         for client_socket, addr in self.all_socket_connections:
+            self.channel_recording_status[addr[0]] = True
             self.channel_state[addr[0]] = []
             print("[Snapshot] Start recording channel from {}".format(addr[0]))
 
         self.check_channel_state()
 
-    def broadcast_marker_message(self):
+    def broadcast_snapshot_message(self, content):
         for client_socket, addr in self.all_socket_connections:
-            send_socket_msg(client_socket, 'snapshot', 'marker')
-        print("[Snapshot] Marker messages are sent")
+            send_socket_msg(client_socket, 'snapshot', content)
 
-    # def stop_incoming_recording(self, client_socket, addr):
-    #     return
+        if content == 'marker':
+            print("[Snapshot] Marker messages are sent")
+        elif content == 'collect':
+            print("[Snapshot] Collect messages are sent")
+
+    def stop_incoming_recording(self, client_socket, addr):
+        self.channel_recording_status[addr[0]] = False
+        print("[Snapshot] Stop recording incoming messages from {}".format(addr[0]))
 
     def check_channel_state(self):
         for client_ip in self.channel_state.keys():
             print("[Snapshot] Channel state from {} : {}".format(client_ip, self.channel_state[client_ip]))
+
+    def all_clients_recorded(self):
+        for client_ip in self.channel_recording_status.keys():
+            if self.channel_recording_status[client_ip]:
+                return False
+        return True
+
+    def initiate_snapshot_collection(self):
+        # Broadcast to collect local states
+        self.broadcast_snapshot_message('collect')
+        # reset snapshot related attributed
 
     def run(self):
         print("[Connection] Ready to accept incoming connections...")
