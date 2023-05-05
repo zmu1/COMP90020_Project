@@ -26,10 +26,13 @@ class Client:
         self.dataset_path = "ml/credit_batch_1.csv"
         self.model = TfModel()
 
+        # Buffer message queue for each client
+        self.buffer_message = []
+
         # Snapshot attributes
         self.local_state_recorded = False
         self.local_state = None
-        self.channel_state = None
+        self.channel_state = []
 
     def check_current_value(self):
         epoch = self.model.check_current_progress()
@@ -56,15 +59,63 @@ class Client:
                 print("\n[Status]: **COMPLETE**")
                 break
 
+    def store_buffer_message(self, server_socket):
+        print("Buffer thread running for", self.ip)
+
+        # Keep listening to response from client
+        while True:
+            # Put incoming messages into buffer queue
+            message = recv_socket_msg(server_socket)
+            self.buffer_message.append(message)
+
+            # Snapshot not started
+            # Skip channel recording
+            # if len(self.channel_recording_status.keys()) == 0:
+            #     continue
+
+            # If recording for the channel
+            if not self.local_state_recorded:
+
+                # Return marker received
+                # End of channel recording
+                if message['type'] == 'snapshot' and message['content'] == 'marker':
+                    self.local_state_recorded = True
+                    continue
+
+                self.channel_state.append(message)
+                #
+                # if ip in self.channel_state.keys():
+                #     self.channel_state[ip].append(message)
+                # else:
+                #     self.channel_state[ip] = [message]
+
+            # print("New incoming message from", ip)
+            # self.check_channel_state()
+
     def listen_command(self):
         """
         Keep listening to commands from server
         """
         print("Ready for new commands...")
 
+        # Thread to buffer incoming messages
+        buffer_thread = threading.Thread(target=self.store_buffer_message, args=(self.server_socket))
+        buffer_thread.start()
+
+        # Queue to buffer incoming messages
+        message_queue = self.buffer_message
+
         while True:
             # receive the message
-            msg = recv_socket_msg(self.server_socket)
+            # msg = recv_socket_msg(self.server_socket)
+
+            # No new message, skip
+            if len(message_queue) == 0:
+                time.sleep(0.1)
+                continue
+
+            # Get the next message
+            msg = message_queue.pop()
 
             # Handle chandy-lamport snapshot
             if msg['type'] == 'snapshot':
@@ -164,7 +215,7 @@ class Client:
         # Reset snapshot attributes
         self.local_state_recorded = False
         self.local_state = None
-        self.channel_state = None
+        self.channel_state = []
         print("[Snapshot] Reset snapshot attributes")
 
 

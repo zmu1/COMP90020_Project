@@ -17,10 +17,8 @@ class Server:
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # Get local host name and port number
-        # self.host = socket.gethostname()
         self.host = socket.gethostbyname(socket.gethostname())
         self.port = port
-        # self.ip = socket.gethostbyname(self.host)
 
         # Bind the port
         self.server_socket.bind((self.host, self.port))
