@@ -96,6 +96,7 @@ class Client:
                 # Snapshot collection
                 elif msg['content'] == 'collect':
                     print("\n[Snapshot] Snapshot collection stage")
+                    self.send_local_state()
 
             # User command operations
             elif msg['type'] == 'command':
@@ -146,6 +147,10 @@ class Client:
     def check_local_state(self):
         print("[Snapshot] Check local state")
         self.local_state.check_model()
+
+    def send_local_state(self):
+        send_socket_msg(self.server_socket, 'state', self.local_state)
+        print("\n[Snapshot] Send back local state recorded")
 
 
 

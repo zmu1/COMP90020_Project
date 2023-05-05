@@ -34,6 +34,7 @@ class Server:
         self.local_state = None
         self.channel_state = None
         self.channel_recording_status = None
+        self.collected_snapshot = []
 
     def handle_connection(self, client_socket, addr):
         """
@@ -79,6 +80,13 @@ class Server:
                         print("[Snapshot] Initiate local states collection...")
                         self.initiate_snapshot_collection()
 
+            # Received returned local states for collection
+            elif response['type'] == "state":
+                print("\n[Snapshot] [Client - {}] Local state received".format(addr[0]))
+                client_local_state = response['content']
+                self.collected_snapshot.append(client_local_state)
+                print("[Snapshot] Received local state count:", len(self.collected_snapshot))
+
             elif response['type'] == "updated_weights":
                 received_weights = response['content']
                 print("[Client - {}] Received pushed new model weights".format(addr[0]))
@@ -122,8 +130,9 @@ class Server:
                 send_socket_msg(client_socket, 'command', command)
 
     def initialise_snapshot(self):
+        print("\n======== Initiate Chandy-Lamport Snapshot ==========")
         # Step 1 - record own local state
-        print("\n[Snapshot] Step 1")
+        print("[Snapshot] Step 1")
         self.record_local_state()
 
         # Step 2 - start recording incoming messages
@@ -133,6 +142,7 @@ class Server:
         # Step 3 - send marker messages to all
         print("\n[Snapshot] Step 3")
         self.broadcast_snapshot_message('marker')
+        print("====================================================\n")
 
     def record_local_state(self):
         print("[Snapshot] Start recording local state")
