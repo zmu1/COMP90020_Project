@@ -4,6 +4,7 @@ class ServerState:
         self.host = server.host
         self.port = server.port
         self.ip = server.host
+        self.channel_state = server.channel_state
 
         # Existing connections
         self.all_socket_connections = server.all_socket_connections
@@ -25,7 +26,10 @@ class ServerState:
         print("|{0:^32}|{1:^32}|".format("Connected client count:", len(self.all_socket_connections)))
         print("+{0:-<32}+{0:-<32}+".format(""))
         print("|{0:^32}|{1:^32}|".format("Connected clients:", temp_str))
+        print("+{0:-<32}+{0:-<32}+".format(""))
+        print("|{0:^32}|{1:^32}|".format("Channel State", str(self.channel_state)))
+        print("+{0:=<32}+{0:=<32}+".format(""))
+
         # print("[Summary] Server - {}".format(self.ip))
         # print("Connected client count:", len(self.all_socket_connections))
         # print("Connected clients:", [conn[1][0] for conn in self.all_socket_connections])
-        print("+{0:=<32}+{0:=<32}+".format(""))
